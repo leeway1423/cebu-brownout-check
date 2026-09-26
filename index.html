@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Unofficial rotational brownout lookup by barangay for Visayan Electric areas in Metro Cebu.">
+<title>Cebu Brownout Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{
+  --paper:#F3F4EF; --surface:#FFFFFF; --ink:#1A1D21; --muted:#5E6670; --line:#D8DBD2;
+  --amber:#E09B12; --amber-ink:#5A3D00; --amber-soft:#FBEBC7;
+  --red:#C23B2C; --yellow:#B98A00; --ok:#2F7D4F; --past:#E6E8E1;
+  --display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#121416; --surface:#1B1E22; --ink:#ECEDE8; --muted:#9AA1A9; --line:#2E3237;
+    --amber:#F0B429; --amber-ink:#1A1300; --amber-soft:#3A2E10;
+    --red:#E0604F; --yellow:#E2B53A; --ok:#5DBB86; --past:#23262A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#121416; --surface:#1B1E22; --ink:#ECEDE8; --muted:#9AA1A9; --line:#2E3237;
+  --amber:#F0B429; --amber-ink:#1A1300; --amber-soft:#3A2E10;
+  --red:#E0604F; --yellow:#E2B53A; --ok:#5DBB86; --past:#23262A;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.wrap>*,.field,.result>*{min-width:0}
+select{max-width:100%;text-overflow:ellipsis}
+.tag{font:600 12px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 34px/1.02 var(--display);letter-spacing:-.01em;margin:6px 0 4px;text-wrap:balance}
+.sub{color:var(--muted);margin:0}
+.status{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:14px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font:700 12px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;padding:6px 9px;border-radius:999px;border:1.5px solid currentColor}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.red{color:var(--red)} .pill.yellow{color:var(--yellow)} .pill.none{color:var(--ok)}
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.days button{font:600 15px/1.15 var(--body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:9px 6px;cursor:pointer;text-align:center}
+.days button small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.days button[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.days button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.field{display:grid;gap:6px}
+label{font:600 13px/1 var(--body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+select{font:400 17px/1.2 var(--body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:12px 48px 12px 12px;width:100%;-webkit-appearance:none;appearance:none;cursor:pointer}
+/* 기본 화살표 대신: 오른쪽 끝에서 18px 안쪽, 테마 색을 따르는 꺾쇠 */
+.pick{position:relative}
+.pick::after{content:"";position:absolute;right:20px;top:50%;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.result{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px}
+.result.hit{border-color:var(--amber)}
+.where{font-size:14px;color:var(--muted)}
+.verdict{font:700 30px/1.05 var(--display);margin:2px 0 0;text-wrap:balance;font-variant-numeric:tabular-nums}
+.result.hit .verdict{color:var(--ink)}
+.result.clear .verdict{color:var(--ok)}
+.strip{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.cell{height:30px;border-radius:4px;background:var(--past);position:relative}
+.cell.on{background:var(--amber)}
+.cell.gone{opacity:.35}
+.cell.now{box-shadow:0 0 0 2px var(--ink)}
+.ticks{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ticks span{text-align:left}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.caution{background:var(--amber-soft);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:14px}
+.fine{font-size:14px;color:var(--muted);margin:0}
+.panel{border-top:1.5px solid var(--line);padding-top:16px;display:grid;gap:10px;font-size:15px}
+.panel h2{font:700 20px/1.1 var(--display);margin:0}
+.cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--ink);color:var(--paper);border-radius:12px;padding:14px 16px}
+.cta b{font:700 18px/1.1 var(--display)}
+.cta span{font-size:13px;opacity:.8}
+.num{font-variant-numeric:tabular-nums;user-select:all;font-weight:600}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+dt{font-weight:600} dd{margin:0}
+a{color:inherit;text-underline-offset:3px}
+footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="tag">Unofficial community service</div>
+    <h1>Cebu Brownout Check</h1>
+    <p class="sub">Rotational brownouts by barangay · Visayan Electric areas</p>
+  </header>
+
+  <div class="status" id="status"></div>
+
+  <div class="days" id="days" role="group" aria-label="Day"></div>
+
+  <div class="field">
+    <label for="city">City / Municipality</label>
+    <div class="pick"><select id="city"></select></div>
+  </div>
+  <div class="field">
+    <label for="brgy">Barangay</label>
+    <div class="pick"><select id="brgy"></select></div>
+  </div>
+
+  <section class="result" id="result" aria-live="polite"></section>
+
+  <section class="panel">
+    <div class="cta">
+      <div><b>Get this on Viber every day</b><br><span>Daily 9 AM schedule + rotational updates</span></div>
+      <span>Community link coming soon</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Emergencies or downed lines</h2>
+    <p class="fine">Call your power utility directly. This page can't take outage reports.</p>
+    <dl>
+      <dt>VECO</dt><dd><span class="num">(032) 230-8326</span> · <span class="num">0919-056-8326</span> (24/7)</dd>
+      <dt>MECO</dt><dd><span class="num">0920-218-6888</span> (Smart) · <span class="num">0967-239-7999</span> (Globe)</dd>
+    </dl>
+  </section>
+
+  <footer>
+    <div>Lapu-Lapu and Cordova are served by MECO, which doesn't publish a rotation map. They aren't covered here.</div>
+    <div>Source: <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener">fyi.aboitizpower.com</a> (Visayan Electric rotation schedule). City of each barangay is matched by us from official barangay lists.</div>
+    <div>Not affiliated with Visayan Electric, MECO or any government agency. Dili opisyal nga serbisyo.</div>
+  </footer>
+</div>
+
+<script>
+let DATA = null;
+function init(){
+
+const HOURS = [12,13,14,15,16,17,18,19,20,21,22];
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+};
+function phtNow(){ const d=new Date(Date.now()+8*3600e3); return {date:d.toISOString().slice(0,10), hour:d.getUTCHours()} }
+function h12(h){ const x=h%12||12; return {x, p: h<12||h===24?'AM':'PM'} }
+function ranges(hours){
+  const hs=[...hours].sort((a,b)=>a-b), out=[]; let s=hs[0], p=hs[0];
+  for(const h of hs.slice(1)){ if(h===p+1){p=h;continue} out.push([s,p+1]); s=p=h }
+  out.push([s,p+1]);
+  return out.map(([a,b])=>{ const A=h12(a),B=h12(b); return A.p===B.p?`${A.x}–${B.x} ${B.p}`:`${A.x} ${A.p}–${B.x} ${B.p}` }).join(', ');
+}
+function dayLabel(date){
+  const t=phtNow().date, d=new Date(date+'T00:00:00Z');
+  const wd=d.toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'}), md=d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+  const diff=Math.round((d-new Date(t+'T00:00:00Z'))/864e5);
+  return {top: diff===0?'Today':diff===1?'Tomorrow':wd, bottom: diff<=1?`${wd}, ${md}`:md};
+}
+let state = { day: 0, city: store.get('city') || 'Cebu City', brgy: store.get('brgy') || 'Lahug' };
+const lgus = DATA.lguOrder.filter(l => DATA.lgus[l]);
+if(!lgus.includes(state.city)) state.city = lgus[0];
+{ const t=phtNow().date, i=DATA.days.findIndex(d=>d.date===t); state.day = i>=0 ? i : 0; }
+
+function hitFor(day, city, brgy){ return (day.hits[city]||{})[brgy] || null }
+
+function renderDays(){
+  $('days').innerHTML='';
+  DATA.days.forEach((d,i)=>{
+    const b=document.createElement('button'), L=dayLabel(d.date);
+    b.type='button'; b.setAttribute('aria-pressed', i===state.day);
+    b.innerHTML=`${L.top}<small>${L.bottom}</small>`;
+    b.onclick=()=>{ state.day=i; render() };
+    $('days').appendChild(b);
+  });
+}
+function renderStatus(){
+  const d=DATA.days[state.day], f=new Date(DATA.fetched);
+  const as=f.toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Manila'});
+  const pill = d.alert ? `<span class="pill ${d.alert.toLowerCase()}">Grid alert ${d.alert}</span>` : `<span class="pill none">No rotation plan</span>`;
+  $('status').innerHTML = `${pill}<span>Schedule as of ${as}</span>`;
+}
+function renderSelects(){
+  const day=DATA.days[state.day];
+  $('city').innerHTML = lgus.map(l=>{
+    const n=Object.keys(day.hits[l]||{}).length;
+    return `<option value="${l}">${l}${n?` · ${n} barangays affected`:''}</option>`}).join('');
+  $('city').value=state.city;
+  const list=DATA.lgus[state.city];
+  if(!list.includes(state.brgy)) state.brgy=list[0];
+  $('brgy').innerHTML = list.map(b=>{
+    const h=hitFor(day,state.city,b);
+    return `<option value="${b.replace(/"/g,'&quot;')}">${b}${h?` — ${ranges(h.hours)}`:''}</option>`}).join('');
+  $('brgy').value=state.brgy;
+}
+function renderResult(){
+  const day=DATA.days[state.day], h=hitFor(day,state.city,state.brgy), now=phtNow(), isToday=day.date===now.date;
+  const el=$('result'); el.className='result '+(h?'hit':'clear');
+  const cells=HOURS.map(x=>{
+    const on=h&&h.hours.includes(x), gone=isToday&&x+1<=now.hour, cur=isToday&&x===now.hour;
+    return `<div class="cell${on?' on':''}${gone?' gone':''}${cur?' now':''}" title="${h12(x).x} ${h12(x).p}"></div>`}).join('');
+  const ticks=HOURS.map((x,i)=>`<span>${i%2===0?h12(x).x+(x===12?'pm':''):''}</span>`).join('');
+  const flag = h&&h.flag ? `<div class="caution">We couldn't confirm which city this "${state.brgy}" belongs to from the utility's list. Check the source map before you plan around it.</div>` : '';
+  el.innerHTML = `
+    <div>
+      <div class="where">${state.brgy}, ${state.city}</div>
+      <p class="verdict">${h ? 'Brownout ' + ranges(h.hours) : (day.plan ? 'No rotational brownout scheduled' : 'No rotation plan for this day')}</p>
+    </div>
+    <div>
+      <div class="strip" aria-hidden="true">${cells}</div>
+      <div class="ticks" aria-hidden="true">${ticks}</div>
+    </div>
+    <div class="legend"><span><i style="background:var(--amber)"></i>Scheduled off</span><span><i style="background:var(--past)"></i>Power on</span>${isToday?'<span><i style="box-shadow:0 0 0 2px var(--ink);background:transparent"></i>Now</span>':''}</div>
+    ${flag}
+    <p class="fine">${h ? 'Only part of the barangay may be affected. ' : ''}Rotational schedules can change quickly depending on grid conditions. Check <a href="${DATA.source}" target="_blank" rel="noopener">the source map</a> for the latest.</p>`;
+}
+function render(){ renderDays(); renderStatus(); renderSelects(); renderResult() }
+$('city').onchange=e=>{ state.city=e.target.value; store.set('city',state.city); renderSelects(); renderResult() };
+$('brgy').onchange=e=>{ state.brgy=e.target.value; store.set('brgy',state.brgy); renderResult() };
+
+render();
+}
+// data.json 은 클라우드 감시가 매시간 새로 쓴다. 캐시를 피하려고 시각을 붙인다.
+fetch('data.json?t=' + Date.now()).then(r => { if(!r.ok) throw new Error(r.status); return r.json() })
+  .then(d => { DATA = d; init() })
+  .catch(() => { document.getElementById('result').innerHTML = '<p class="fine">Schedule data could not be loaded. Please try again, or check <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener">the source map</a>.</p>' });
+</script>
+</body>
+</html>
