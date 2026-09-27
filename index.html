@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Unofficial rotational brownout lookup by barangay for Visayan Electric areas in Metro Cebu.">
-<title>Cebu Brownout Check</title>
+<meta name="description" content="Cebu brownout schedule today: Visayan Electric scheduled maintenance and rotational brownouts by barangay for Cebu City, Mandaue, Talisay, Consolacion, Liloan, Minglanilla, Naga and San Fernando. Unofficial, updated hourly.">
+<title>Cebu Brownout Schedule Today · by Barangay</title>
+<link rel="canonical" href="https://leeway1423.github.io/cebu-brownout-check/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
@@ -76,6 +77,8 @@ select{font:400 17px/1.2 var(--body);color:var(--ink);background:var(--surface);
 .cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--ink);color:var(--paper);border-radius:12px;padding:14px 16px}
 .cta b{font:700 18px/1.1 var(--display)}
 .cta span{font-size:13px;opacity:.8}
+.sch{display:grid;gap:8px}.sch article{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--amber);border-radius:12px;padding:12px 14px}.sch p{margin:3px 0}.sch .t{font-weight:700}
+.cities{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px}
 .num{font-variant-numeric:tabular-nums;user-select:all;font-weight:600}
 dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
 dt{font-weight:600} dd{margin:0}
@@ -91,7 +94,7 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
   <header>
     <div class="tag">Unofficial community service</div>
     <h1>Cebu Brownout Check</h1>
-    <p class="sub">Rotational brownouts by barangay · Visayan Electric areas</p>
+    <p class="sub">Scheduled &amp; rotational brownouts by barangay · Visayan Electric areas</p>
   </header>
 
   <div class="status" id="status"></div>
@@ -108,6 +111,15 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
   </div>
 
   <section class="result" id="result" aria-live="polite"></section>
+
+  <section class="panel" id="sched" aria-live="polite"></section>
+
+  <nav class="panel" aria-label="Brownouts by city">
+    <h2>Brownouts by city</h2>
+    <div class="cities">
+      <a href="cebu-city/">Cebu City</a><a href="mandaue/">Mandaue City</a><a href="talisay/">Talisay City</a><a href="consolacion/">Consolacion</a><a href="liloan/">Liloan</a><a href="minglanilla/">Minglanilla</a><a href="naga/">Naga City</a><a href="san-fernando/">San Fernando</a>
+    </div>
+  </nav>
 
   <section class="panel">
     <div class="cta">
@@ -127,7 +139,7 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
 
   <footer>
     <div>Lapu-Lapu and Cordova are served by MECO, which doesn't publish a rotation map. They aren't covered here.</div>
-    <div>Source: <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener" data-umami-event="source-click">fyi.aboitizpower.com</a> (Visayan Electric rotation schedule). City of each barangay is matched by us from official barangay lists.</div>
+    <div>Sources: <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener" data-umami-event="source-click">fyi.aboitizpower.com</a> (Visayan Electric rotation schedule) and <a href="https://www.visayanelectric.com/customer-services/service-advisory" target="_blank" rel="noopener" data-umami-event="source-click">Visayan Electric service advisories</a> (scheduled maintenance, shown as written). City of each barangay is matched by us from official barangay lists.</div>
     <div>Not affiliated with Visayan Electric, MECO or any government agency. Dili opisyal nga serbisyo.</div>
     <div><a href="privacy.html" data-umami-event="privacy-click">Privacy Policy</a></div>
   </footer>
@@ -157,7 +169,8 @@ function dayLabel(date){
   const diff=Math.round((d-new Date(t+'T00:00:00Z'))/864e5);
   return {top: diff===0?'Today':diff===1?'Tomorrow':wd, bottom: diff<=1?`${wd}, ${md}`:md};
 }
-let state = { day: 0, city: store.get('city') || 'Cebu City', brgy: store.get('brgy') || 'Lahug' };
+const qCity = new URLSearchParams(location.search).get('city');
+let state = { day: 0, city: qCity || store.get('city') || 'Cebu City', brgy: store.get('brgy') || 'Lahug' };
 const lgus = DATA.lguOrder.filter(l => DATA.lgus[l]);
 if(!lgus.includes(state.city)) state.city = lgus[0];
 { const t=phtNow().date, i=DATA.days.findIndex(d=>d.date===t); state.day = i>=0 ? i : 0; }
@@ -214,8 +227,20 @@ function renderResult(){
     ${flag}
     <p class="fine">${h ? 'Only part of the barangay may be affected. ' : ''}Rotational schedules can change quickly depending on grid conditions. Check <a href="${DATA.source}" target="_blank" rel="noopener">the source map</a> for the latest.</p>`;
 }
-function render(){ renderDays(); renderStatus(); renderSelects(); renderResult() }
-$('city').onchange=e=>{ state.city=e.target.value; store.set('city',state.city); renderSelects(); renderResult() };
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function renderSched(){
+  const el=$('sched'), day=DATA.days[state.day];
+  if(DATA.scheduled==null){ el.innerHTML='<h2>Scheduled maintenance</h2><div class="caution">Visayan Electric\'s advisory page could not be checked just now. Scheduled brownouts are unconfirmed — see the official advisory.</div>'; return }
+  const all=DATA.scheduled.filter(r=>r.date===day.date);
+  const mine=all.filter(r=>r.lgus.includes(state.city)), other=all.filter(r=>!r.lgus.length);
+  const card=r=>`<article><p class="t">${esc(r.time)}</p><p>${esc(r.areas)}</p><p class="fine">${esc(r.purpose)} · <a href="${esc(r.url)}" target="_blank" rel="noopener" data-umami-event="source-click">source</a></p></article>`;
+  el.innerHTML=`<h2>Scheduled maintenance · ${esc(state.city)}</h2>`+
+    (mine.length?`<div class="sch">${mine.map(card).join('')}</div>`:`<p class="fine">No scheduled maintenance listed for ${esc(state.city)} on this day.</p>`)+
+    (other.length?`<h2>Other areas</h2><div class="sch">${other.map(card).join('')}</div>`:'')+
+    `<p class="fine">Scheduled maintenance is copied as written by Visayan Electric. Check the exact streets in the text.</p>`;
+}
+function render(){ renderDays(); renderStatus(); renderSelects(); renderResult(); renderSched() }
+$('city').onchange=e=>{ state.city=e.target.value; store.set('city',state.city); renderSelects(); renderResult(); renderSched() };
 $('brgy').onchange=e=>{ state.brgy=e.target.value; store.set('brgy',state.brgy); renderResult();
   try{ if(state.brgy) window.umami && umami.track('barangay-lookup',{city:state.city}) }catch(_){} };
 
