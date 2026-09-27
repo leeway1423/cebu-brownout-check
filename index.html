@@ -82,6 +82,7 @@ dt{font-weight:600} dd{margin:0}
 a{color:inherit;text-underline-offset:3px}
 footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
 </style>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="159cb7d0-4c83-4baf-b879-e32617eef01c" data-domains="leeway1423.github.io"></script>
 </head>
 <body>
 
@@ -126,9 +127,9 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
 
   <footer>
     <div>Lapu-Lapu and Cordova are served by MECO, which doesn't publish a rotation map. They aren't covered here.</div>
-    <div>Source: <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener">fyi.aboitizpower.com</a> (Visayan Electric rotation schedule). City of each barangay is matched by us from official barangay lists.</div>
+    <div>Source: <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener" data-umami-event="source-click">fyi.aboitizpower.com</a> (Visayan Electric rotation schedule). City of each barangay is matched by us from official barangay lists.</div>
     <div>Not affiliated with Visayan Electric, MECO or any government agency. Dili opisyal nga serbisyo.</div>
-    <div><a href="privacy.html">Privacy Policy</a></div>
+    <div><a href="privacy.html" data-umami-event="privacy-click">Privacy Policy</a></div>
   </footer>
 </div>
 
@@ -215,7 +216,8 @@ function renderResult(){
 }
 function render(){ renderDays(); renderStatus(); renderSelects(); renderResult() }
 $('city').onchange=e=>{ state.city=e.target.value; store.set('city',state.city); renderSelects(); renderResult() };
-$('brgy').onchange=e=>{ state.brgy=e.target.value; store.set('brgy',state.brgy); renderResult() };
+$('brgy').onchange=e=>{ state.brgy=e.target.value; store.set('brgy',state.brgy); renderResult();
+  try{ if(state.brgy) window.umami && umami.track('barangay-lookup',{city:state.city}) }catch(_){} };
 
 render();
 }
