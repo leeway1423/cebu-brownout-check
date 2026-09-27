@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Cebu brownout schedule today: Visayan Electric scheduled maintenance and rotational brownouts by barangay for Cebu City, Mandaue, Talisay, Consolacion, Liloan, Minglanilla, Naga and San Fernando. Unofficial, updated hourly.">
-<title>Cebu Brownout Schedule Today · by Barangay</title>
+<meta name="description" content="Cebu brownout schedule today: Visayan Electric scheduled maintenance and rotational brownouts by barangay for Cebu City, Mandaue, Talisay, Consolacion, Liloan, Minglanilla, Naga and San Fernando. Plus MCWD water interruptions. Unofficial, updated hourly.">
+<title>Cebu Brownout &amp; Water Interruption Today · by Barangay</title>
 <link rel="canonical" href="https://leeway1423.github.io/cebu-brownout-check/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -94,7 +94,7 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
   <header>
     <div class="tag">Unofficial community service</div>
     <h1>Cebu Brownout Check</h1>
-    <p class="sub">Scheduled &amp; rotational brownouts by barangay · Visayan Electric areas</p>
+    <p class="sub">Scheduled &amp; rotational brownouts by barangay (Visayan Electric areas) · MCWD water interruptions</p>
   </header>
 
   <div class="status" id="status"></div>
@@ -114,10 +114,12 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
 
   <section class="panel" id="sched" aria-live="polite"></section>
 
+  <section class="panel" id="water" aria-live="polite"></section>
+
   <nav class="panel" aria-label="Brownouts by city">
-    <h2>Brownouts by city</h2>
+    <h2>By city</h2>
     <div class="cities">
-      <a href="cebu-city/">Cebu City</a><a href="mandaue/">Mandaue City</a><a href="talisay/">Talisay City</a><a href="consolacion/">Consolacion</a><a href="liloan/">Liloan</a><a href="minglanilla/">Minglanilla</a><a href="naga/">Naga City</a><a href="san-fernando/">San Fernando</a>
+      <a href="cebu-city/">Cebu City</a><a href="mandaue/">Mandaue City</a><a href="talisay/">Talisay City</a><a href="consolacion/">Consolacion</a><a href="liloan/">Liloan</a><a href="minglanilla/">Minglanilla</a><a href="naga/">Naga City</a><a href="san-fernando/">San Fernando</a><a href="lapu-lapu/">Lapu-Lapu City</a><a href="cordova/">Cordova</a><a href="compostela/">Compostela</a>
     </div>
   </nav>
 
@@ -139,8 +141,8 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
 
   <footer>
     <div>Lapu-Lapu and Cordova are served by MECO, which doesn't publish a rotation map. They aren't covered here.</div>
-    <div>Sources: <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener" data-umami-event="source-click">fyi.aboitizpower.com</a> (Visayan Electric rotation schedule) and <a href="https://www.visayanelectric.com/customer-services/service-advisory" target="_blank" rel="noopener" data-umami-event="source-click">Visayan Electric service advisories</a> (scheduled maintenance, shown as written). City of each barangay is matched by us from official barangay lists.</div>
-    <div>Not affiliated with Visayan Electric, MECO or any government agency. Dili opisyal nga serbisyo.</div>
+    <div>Sources: <a href="https://fyi.aboitizpower.com" target="_blank" rel="noopener" data-umami-event="source-click">fyi.aboitizpower.com</a> (Visayan Electric rotation schedule) and <a href="https://www.visayanelectric.com/customer-services/service-advisory" target="_blank" rel="noopener" data-umami-event="source-click">Visayan Electric service advisories</a> (scheduled maintenance, shown as written), and <a href="https://www.mcwd.gov.ph" target="_blank" rel="noopener" data-umami-event="source-click">MCWD</a> (water interruptions, shown as written). City of each barangay is matched by us from official barangay lists.</div>
+    <div>Not affiliated with Visayan Electric, MECO, MCWD or any government agency. Dili opisyal nga serbisyo.</div>
     <div><a href="privacy.html" data-umami-event="privacy-click">Privacy Policy</a></div>
   </footer>
 </div>
@@ -239,7 +241,15 @@ function renderSched(){
     (other.length?`<h2>Other areas</h2><div class="sch">${other.map(card).join('')}</div>`:'')+
     `<p class="fine">Scheduled maintenance is copied as written by Visayan Electric. Check the exact streets in the text.</p>`;
 }
-function render(){ renderDays(); renderStatus(); renderSelects(); renderResult(); renderSched() }
+function renderWater(){
+  const el=$('water'), w=DATA.water;
+  if(w==null){ el.innerHTML='<h2>💧 Water interruptions</h2><div class="caution">MCWD\'s interruption list could not be checked just now. Water interruptions are unconfirmed.</div>'; return }
+  const card=it=>`<article style="border-left-color:#2F7FB8"><p class="t">${esc(it.cities.join(', ')||'Area as listed')} · posted ${esc(dayLabel(it.date).bottom)}</p><p>${esc(it.text)}</p></article>`;
+  el.innerHTML='<h2>💧 Water interruptions · since yesterday</h2>'+
+    (w.length?`<div class="sch">${w.map(card).join('')}</div>`:'<p class="fine">No water interruption posted by MCWD since yesterday.</p>')+
+    '<p class="fine">As posted by MCWD (Metro Cebu Water District). EWSI = emergency water service interruption · AA = affected areas · EST/ETR = estimated time of restoration.</p>';
+}
+function render(){ renderDays(); renderStatus(); renderSelects(); renderResult(); renderSched(); renderWater() }
 $('city').onchange=e=>{ state.city=e.target.value; store.set('city',state.city); renderSelects(); renderResult(); renderSched() };
 $('brgy').onchange=e=>{ state.brgy=e.target.value; store.set('brgy',state.brgy); renderResult();
   try{ if(state.brgy) window.umami && umami.track('barangay-lookup',{city:state.city}) }catch(_){} };
