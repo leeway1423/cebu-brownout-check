@@ -94,7 +94,7 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
   <header>
     <div class="tag">Unofficial community service</div>
     <h1>Cebu Alerts</h1>
-    <p class="sub">Scheduled &amp; rotational brownouts by barangay (Visayan Electric areas) · MCWD water interruptions</p>
+    <p class="sub">Scheduled &amp; rotational brownouts by barangay (Visayan Electric areas) · MCWD water interruptions · air quality</p>
   </header>
 
   <div class="status" id="status"></div>
@@ -115,6 +115,8 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
   <section class="panel" id="sched" aria-live="polite"></section>
 
   <section class="panel" id="water" aria-live="polite"></section>
+
+  <section class="panel" id="air" aria-live="polite"></section>
 
   <nav class="panel" aria-label="Brownouts by city">
     <h2>By city</h2>
@@ -249,7 +251,17 @@ function renderWater(){
     (w.length?`<div class="sch">${w.map(card).join('')}</div>`:'<p class="fine">No water interruption posted by MCWD since yesterday.</p>')+
     '<p class="fine">As posted by MCWD (Metro Cebu Water District). EWSI = emergency water service interruption · AA = affected areas · EST/ETR = estimated time of restoration.</p>';
 }
-function render(){ renderDays(); renderStatus(); renderSelects(); renderResult(); renderSched(); renderWater() }
+const AQI_LEVELS=[[50,'Good','#2F9E44'],[100,'Moderate','#C9A400'],[150,'Unhealthy for Sensitive Groups','#E8590C'],[200,'Unhealthy','#D6336C'],[300,'Very Unhealthy','#862E9C'],[1e6,'Hazardous','#7D1128']];
+const aqiLevel=a=>AQI_LEVELS.find(l=>a<=l[0]);
+function renderAir(){
+  const el=$('air'), a=DATA.air;
+  if(a==null){ el.innerHTML='<h2>🌫 Air quality</h2><p class="fine">Air quality data could not be loaded just now.</p>'; return }
+  const rows=Object.entries(a).map(([c,v])=>{ const L=aqiLevel(v.aqi);
+    return `<dt><span style="color:${L[2]}">●</span> ${esc(c)}</dt><dd><b class="num">${v.aqi}</b> ${esc(L[1])}${v.today_max!=null&&v.today_max>v.aqi?` · up to ${v.today_max} later today`:''}</dd>` }).join('');
+  el.innerHTML='<h2>🌫 Air quality · US AQI</h2><dl>'+rows+'</dl>'+
+    '<p class="fine">Model estimate, not a local measurement (covers about 40 km). Air quality: Open-Meteo.com (CC BY 4.0), contains modified Copernicus Atmosphere Monitoring Service information. Categories follow the US EPA Air Quality Index.</p>';
+}
+function render(){ renderDays(); renderStatus(); renderSelects(); renderResult(); renderSched(); renderWater(); renderAir() }
 $('city').onchange=e=>{ state.city=e.target.value; store.set('city',state.city); renderSelects(); renderResult(); renderSched() };
 $('brgy').onchange=e=>{ state.brgy=e.target.value; store.set('brgy',state.brgy); renderResult();
   try{ if(state.brgy) window.umami && umami.track('barangay-lookup',{city:state.city}) }catch(_){} };
