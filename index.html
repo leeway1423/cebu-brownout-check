@@ -252,7 +252,7 @@ function renderSched(){
   if(DATA.scheduled==null){ el.innerHTML='<h2>Scheduled maintenance</h2><div class="caution">Visayan Electric\'s advisory page could not be checked just now. Scheduled brownouts are unconfirmed — see the official advisory.</div>'; return }
   const all=DATA.scheduled.filter(r=>r.date===day.date);
   const mine=all.filter(r=>r.lgus.includes(state.city)), other=all.filter(r=>!r.lgus.length);
-  const card=r=>`<article><p class="t">${esc(r.time)}</p><p>${esc(r.areas)}</p><p class="fine">${esc(r.purpose)} · <a href="${esc(r.url)}" target="_blank" rel="noopener" data-umami-event="source-click">source</a></p></article>`;
+  const card=r=>`<article${r.cancelled?' style="opacity:.75;border-left-color:var(--muted)"':''}><p class="t">${r.cancelled?'❌ Cancelled by Visayan Electric · ':''}${esc(r.time)}</p><p>${esc(r.areas)}</p><p class="fine">${esc(r.purpose)} · <a href="${esc(r.url)}" target="_blank" rel="noopener" data-umami-event="source-click">source</a></p></article>`;
   el.innerHTML=`<h2>Scheduled maintenance · ${esc(state.city)}</h2>`+
     (mine.length?`<div class="sch">${mine.map(card).join('')}</div>`:`<p class="fine">No scheduled maintenance listed for ${esc(state.city)} on this day.</p>`)+
     (other.length?`<h2>Other areas</h2><div class="sch">${other.map(card).join('')}</div>`:'')+
