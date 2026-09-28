@@ -253,10 +253,12 @@ function renderSched(){
   const all=DATA.scheduled.filter(r=>r.date===day.date);
   const mine=all.filter(r=>r.lgus.includes(state.city)), other=all.filter(r=>!r.lgus.length);
   const card=r=>`<article${r.cancelled?' style="opacity:.75;border-left-color:var(--muted)"':''}><p class="t">${r.cancelled?'❌ Cancelled by Visayan Electric · ':''}${esc(r.time)}</p><p>${esc(r.areas)}</p><p class="fine">${esc(r.purpose)} · <a href="${esc(r.url)}" target="_blank" rel="noopener" data-umami-event="source-click">source</a></p></article>`;
+  const ck=DATA.scheduledChecked?new Date(DATA.scheduledChecked).toLocaleString('en-US',{weekday:'short',hour:'numeric',minute:'2-digit',timeZone:'Asia/Manila'}):null;
   el.innerHTML=`<h2>Scheduled maintenance · ${esc(state.city)}</h2>`+
+    (DATA.scheduledStale?`<div class="caution">Last checked ${esc(ck)}. Visayan Electric's advisory could not be re-checked for a while — please confirm on the official page.</div>`:'')+
     (mine.length?`<div class="sch">${mine.map(card).join('')}</div>`:`<p class="fine">No scheduled maintenance listed for ${esc(state.city)} on this day.</p>`)+
     (other.length?`<h2>Other areas</h2><div class="sch">${other.map(card).join('')}</div>`:'')+
-    `<p class="fine">Scheduled maintenance is copied as written by Visayan Electric. Check the exact streets in the text.</p>`;
+    `<p class="fine">Scheduled maintenance is copied as written by Visayan Electric${ck?` (checked ${esc(ck)})`:''}. Check the exact streets in the text.</p>`;
 }
 function renderWater(){
   const el=$('water'), w=DATA.water;
