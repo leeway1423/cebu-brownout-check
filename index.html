@@ -264,7 +264,7 @@ function renderWater(){
   const el=$('water'), w=DATA.water;
   if(w==null){ el.innerHTML='<h2>💧 Water interruptions</h2><div class="caution">MCWD\'s interruption list could not be checked just now. Water interruptions are unconfirmed.</div>'; return }
   const card=it=>`<article style="border-left-color:#2F7FB8"><p class="t">${esc(it.cities.join(', ')||'Area as listed')} · posted ${esc(dayLabel(it.date).bottom)}</p><p>${esc(it.text)}</p></article>`;
-  el.innerHTML='<h2>💧 Water interruptions · since yesterday</h2>'+
+  el.innerHTML='<h2>💧 Water interruptions | Walay tubig · since yesterday</h2>'+
     (w.length?`<div class="sch">${w.map(card).join('')}</div>`:'<p class="fine">No water interruption posted by MCWD since yesterday.</p>')+
     '<p class="fine">As posted by MCWD (Metro Cebu Water District). EWSI = emergency water service interruption · AA = affected areas · EST/ETR = estimated time of restoration.</p>';
 }
