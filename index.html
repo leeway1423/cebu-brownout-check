@@ -79,10 +79,17 @@ select{font:400 17px/1.2 var(--body);color:var(--ink);background:var(--surface);
 .cta span{font-size:13px;opacity:.8}
 .sch{display:grid;gap:8px}.sch article{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--amber);border-radius:12px;padding:12px 14px}.sch p{margin:3px 0}.sch .t{font-weight:700}
 .cities{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px}
-.aqmap{width:100%;max-height:62vh;display:block;margin:4px auto}
-.aqmap path{stroke:var(--surface);stroke-width:1.6;cursor:pointer;outline:none}
-.aqmap path:hover,.aqmap path:focus-visible{stroke:var(--ink);stroke-width:3}
-.aqmap path.sel{stroke:var(--ink);stroke-width:4}
+.mapwrap{position:relative}
+.aqmap{width:100%;max-height:62vh;display:block;margin:4px auto;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.aqmap.zoomed{touch-action:none;cursor:grab}
+.aqmap path{stroke:var(--surface);stroke-width:0.8px;vector-effect:non-scaling-stroke;cursor:pointer;outline:none}
+.aqmap path:hover,.aqmap path:focus-visible{stroke:var(--ink);stroke-width:2px}
+.aqmap path.sel{stroke:var(--ink);stroke-width:2.5px}
+.aqmap .labels text{fill:var(--ink);stroke:var(--surface);paint-order:stroke;stroke-linejoin:round;font-family:var(--body);font-weight:600;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.zoombtns{position:absolute;top:6px;right:0;display:grid;gap:6px}
+.zoombtns button{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:700 20px/1 var(--body);cursor:pointer}
+.zoombtns button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.maphint{margin-top:2px}
 .aqinfo{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
 .aqinfo .verdict{font-size:26px}
 details summary{cursor:pointer;font-weight:600;padding:6px 0}
@@ -275,8 +282,15 @@ function geoPaths(){
   const x0=Math.min(...lons), x1=Math.max(...lons), y0=Math.min(...lats), y1=Math.max(...lats), k=Math.cos((y0+y1)/2*Math.PI/180);
   const W=1000, s=W/((x1-x0)*k), H=Math.round((y1-y0)*s);
   const P=c=>((c[0]-x0)*k*s).toFixed(1)+','+((y1-c[1])*s).toFixed(1);
-  GEO.features.forEach(f=>{ f._d=f._polys.map(poly=>poly.map(r=>'M'+r.map(P).join('L')+'Z').join('')).join('') });
-  GEO._vb=`0 0 ${W} ${H}`;
+  const Q=c=>[(c[0]-x0)*k*s,(y1-c[1])*s];
+  GEO.features.forEach(f=>{
+    f._d=f._polys.map(poly=>poly.map(r=>'M'+r.map(P).join('L')+'Z').join('')).join('');
+    const xy=f._polys.flatMap(poly=>poly[0].map(Q)), xs=xy.map(q=>q[0]), ys=xy.map(q=>q[1]);
+    const area=Math.max(1,(Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys)));
+    [f._lx,f._ly]=Q([f.properties.lon,f.properties.lat]);
+    f._lk=Math.max(1.6,Math.sqrt(25600/area));  // 이 배율 이상 확대하면 이름이 보인다 (큰 시·군부터)
+  });
+  GEO._W=W; GEO._H=H; GEO._vb=`0 0 ${W} ${H}`;
 }
 function renderAir(){
   const el=$('air'), a=DATA.air, L=MAP_LAYERS.air;
@@ -287,21 +301,71 @@ function renderAir(){
   const legend=`<div class="legend">${AQI_LEVELS.slice(0,4).map(l=>`<span><i style="background:${l[2]}"></i>${l[1]}</span>`).join('')}<span><i style="background:var(--past)"></i>No data</span></div>`;
   let map='<p class="fine">Loading map…</p>';
   if(GEO){
-    map=`<svg class="aqmap" viewBox="${GEO._vb}" role="img" aria-label="Map of Cebu Province colored by air quality">`+GEO.features.map(f=>{
+    map=`<div class="mapwrap"><svg class="aqmap" viewBox="${GEO._vb}" role="img" aria-label="Map of Cebu Province colored by air quality. Zoom in to see town names.">`+GEO.features.map(f=>{
       const k=f.properties.key, v=L.value(a[k],airMode), lv=v!=null?aqiLevel(v):null;
-      return `<path d="${f._d}" fill="${lv?lv[2]:'var(--past)'}" class="${k===airSel?'sel':''}" data-k="${esc(k)}" tabindex="0" role="button" aria-label="${esc(f.properties.name)}: ${v!=null?'US AQI '+v+', '+lv[1]:'no data'}"><title>${esc(f.properties.name)}: ${v!=null?v+' '+lv[1]:'no data'}</title></path>`}).join('')+'</svg>';
+      return `<path d="${f._d}" fill="${lv?lv[2]:'var(--past)'}" class="${k===airSel?'sel':''}" data-k="${esc(k)}" tabindex="0" role="button" aria-label="${esc(f.properties.name)}: ${v!=null?'US AQI '+v+', '+lv[1]:'no data'}"><title>${esc(f.properties.name)}: ${v!=null?v+' '+lv[1]:'no data'}</title></path>`}).join('')+
+      '<g class="labels" aria-hidden="true">'+GEO.features.map(f=>`<text x="${f._lx.toFixed(1)}" y="${f._ly.toFixed(1)}" data-lk="${f._lk.toFixed(2)}">${esc(f.properties.name.replace(/^City of /,''))}</text>`).join('')+'</g></svg>'+
+      '<div class="zoombtns"><button type="button" data-z="in" aria-label="Zoom in">+</button><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="reset" aria-label="Reset map">⟲</button></div></div>'+
+      '<p class="fine maphint">Pinch, double-tap or use + to zoom in and see town names.</p>';
   } else if(GEO===false){ map='<p class="fine">The map could not be loaded. See the list below.</p>' }
-  const sv=L.value(a[airSel],airMode), slv=sv!=null?aqiLevel(sv):null;
+  const buildInfo=()=>{ const sv=L.value(a[airSel],airMode), slv=sv!=null?aqiLevel(sv):null;
   const sname=GEO&&GEO.features?(GEO.features.find(f=>f.properties.key===airSel)||{properties:{name:airSel}}).properties.name:airSel;
-  const info=`<div class="aqinfo" style="border-left-color:${slv?slv[2]:'var(--line)'}"><div class="where">${esc(sname)} · ${esc(AIR_MODES.find(m=>m[0]===airMode)[1].toLowerCase())}</div>`+
+  return `<div class="aqinfo" style="border-left-color:${slv?slv[2]:'var(--line)'}"><div class="where">${esc(sname)} · ${esc(AIR_MODES.find(m=>m[0]===airMode)[1].toLowerCase())}</div>`+
     (slv?`<p class="verdict">${sv} — ${esc(slv[1])}</p><p class="fine">US EPA: “${esc(slv[3])}”${a[airSel]&&airMode==='now'&&a[airSel].pm25!=null?` · PM2.5 ${a[airSel].pm25} µg/m³`:''}</p>`:'<p class="fine">No data for this time.</p>')+
-    '<p class="fine">Tap a town on the map to see its value.</p></div>';
+    '<p class="fine">Tap a town on the map to see its value.</p></div>' };
+  const info=buildInfo();
   const rows=Object.entries(a).sort((x,y)=>(L.value(y[1],airMode)||0)-(L.value(x[1],airMode)||0)).map(([c,v])=>{ const val=L.value(v,airMode), lv=val!=null?aqiLevel(val):null;
     return `<dt><span style="color:${lv?lv[2]:'var(--muted)'}">●</span> ${esc(c)}</dt><dd><b class="num">${val??'–'}</b> ${lv?esc(lv[1]):''}</dd>` }).join('');
   el.innerHTML=head+modes+map+legend+info+`<details><summary>All 53 towns (highest first)</summary><dl>${rows}</dl></details>`+note;
   el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ airMode=b.dataset.m; renderAir(); try{ window.umami&&umami.track('air-mode',{mode:airMode}) }catch(_){} });
-  const pick=k=>{ airSel=k; store.set('airSel',k); renderAir(); const n=el.querySelector(`path[data-k="${CSS.escape(k)}"]`); n&&n.focus({preventScroll:true}); try{ window.umami&&umami.track('air-map-tap',{town:k}) }catch(_){} };
-  el.querySelectorAll('path[data-k]').forEach(p=>{ p.onclick=()=>pick(p.dataset.k); p.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pick(p.dataset.k) } } });
+  const pick=k=>{ airSel=k; store.set('airSel',k);  // 지도는 다시 그리지 않는다 (확대 상태·두 번 탭 유지)
+    el.querySelectorAll('path[data-k]').forEach(p=>p.classList.toggle('sel',p.dataset.k===k));
+    el.querySelector('.aqinfo').outerHTML=buildInfo(); try{ window.umami&&umami.track('air-map-tap',{town:k}) }catch(_){} };
+  el.querySelectorAll('path[data-k]').forEach(p=>{ p.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pick(p.dataset.k) } } });
+  const svg=el.querySelector('svg.aqmap'); if(svg) mapZoom(svg, el, pick);
+}
+// ── 지도 확대·이동: 두 손가락 벌리기, 두 번 탭, 트랙패드 핀치(ctrl+휠), +/− 버튼. 확대하면 시·군 이름이 나타난다
+let airView=null;
+function mapZoom(svg, el, pick){
+  const W=GEO._W, H=GEO._H, MAXK=12;
+  if(!airView) airView={x:0,y:0,w:W,h:H};
+  const toSvg=(cx,cy)=>{ const m=svg.getScreenCTM().inverse(), pt=svg.createSVGPoint(); pt.x=cx; pt.y=cy; const r=pt.matrixTransform(m); return [r.x,r.y] };
+  const apply=()=>{
+    const k=W/airView.w;
+    svg.setAttribute('viewBox',`${airView.x} ${airView.y} ${airView.w} ${airView.h}`);
+    svg.classList.toggle('zoomed',k>1.01);
+    const ctm=svg.getScreenCTM(), unit=ctm?1/ctm.a:1;  // 화면 1px = SVG 몇 단위
+    svg.querySelectorAll('.labels text').forEach(t=>{ const on=k>=+t.dataset.lk; t.style.display=on?'':'none';
+      if(on){ t.setAttribute('font-size',(12*unit).toFixed(2)); t.setAttribute('stroke-width',(3*unit).toFixed(2)) } });
+  };
+  const zoomAt=(sx,sy,f)=>{
+    const k=Math.min(MAXK,Math.max(1,(W/airView.w)*f)), w=W/k, h=H/k;
+    const x=sx-(sx-airView.x)*(w/airView.w), y=sy-(sy-airView.y)*(h/airView.h);
+    airView={x:Math.min(Math.max(0,x),W-w), y:Math.min(Math.max(0,y),H-h), w, h}; apply();
+  };
+  const center=()=>[airView.x+airView.w/2, airView.y+airView.h/2];
+  el.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{ const z=b.dataset.z;
+    if(z==='reset'){ airView={x:0,y:0,w:W,h:H}; apply() } else zoomAt(...center(), z==='in'?2:0.5);
+    try{ window.umami&&umami.track('air-map-zoom',{how:'button'}) }catch(_){} });
+  svg.addEventListener('wheel',e=>{ if(!e.ctrlKey) return; e.preventDefault(); zoomAt(...toSvg(e.clientX,e.clientY), Math.exp(-e.deltaY*0.01)) },{passive:false});
+  svg.addEventListener('dblclick',e=>{ e.preventDefault(); zoomAt(...toSvg(e.clientX,e.clientY),2) });
+  const pts=new Map(); let moved=false, last=null, pinch=null;
+  const dist=()=>{ const [a,b]=[...pts.values()]; return Math.hypot(a.x-b.x,a.y-b.y) };
+  const mid=()=>{ const [a,b]=[...pts.values()]; return [(a.x+b.x)/2,(a.y+b.y)/2] };
+  svg.addEventListener('pointerdown',e=>{ pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){ moved=false; last={x:e.clientX,y:e.clientY} }
+    if(pts.size===2){ pinch=dist(); moved=true } });
+  svg.addEventListener('pointermove',e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2&&pinch){ const d=dist(); zoomAt(...toSvg(...mid()), d/pinch); pinch=d; return }
+    if(pts.size===1&&last){ const dx=e.clientX-last.x, dy=e.clientY-last.y;
+      if(Math.hypot(dx,dy)>6) moved=true;
+      if(moved&&W/airView.w>1.01){ const u=1/svg.getScreenCTM().a;
+        airView.x=Math.min(Math.max(0,airView.x-dx*u),W-airView.w); airView.y=Math.min(Math.max(0,airView.y-dy*u),H-airView.h); apply() }
+      last={x:e.clientX,y:e.clientY} } });
+  const up=e=>{ const wasTap=pts.size===1&&!moved; pts.delete(e.pointerId); if(pts.size<2) pinch=null;
+    if(wasTap&&e.type==='pointerup'){ const n=document.elementFromPoint(e.clientX,e.clientY); const p=n&&n.closest('path[data-k]'); if(p) pick(p.dataset.k) } };
+  svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',up);
+  apply();
 }
 fetch('cebu-map.geojson').then(r=>{ if(!r.ok) throw 0; return r.json() }).then(g=>{ GEO=g; geoPaths(); renderAir() }).catch(()=>{ GEO=false; renderAir() });
 function render(){ renderDays(); renderStatus(); renderSelects(); renderResult(); renderSched(); renderWater(); renderAir() }
