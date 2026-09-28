@@ -310,10 +310,17 @@ function geoPaths(){
 }
 function renderAir(){
   const el=$('air'), a=DATA.air, L=MAP_LAYERS.air;
-  const head='<h2>🌫 Air quality · Cebu Province</h2>';
+  const head='<h2>🌫 Air quality · Cebu Province</h2>';  // 날짜는 아래 버튼·카드에
   if(a==null){ el.innerHTML=head+'<p class="fine">Air quality data could not be loaded just now.</p>'; return }
   const note='<p class="fine">Model estimate, not a local measurement — each value covers a wide area (about 40 km), so nearby towns often share a color. US EPA Air Quality Index. Air quality: Open-Meteo.com (CC BY 4.0), contains modified Copernicus Atmosphere Monitoring Service information. Boundaries: PSA 2023 via philippines-json-maps (MIT).</p>';
-  const modes=`<div class="days" role="group" aria-label="Time">${AIR_MODES.map(([m,t])=>`<button type="button" data-m="${m}" aria-pressed="${m===airMode}">${t}</button>`).join('')}</div>`;
+  // 버튼·카드에 날짜를 붙인다 (값 기준 시각은 Open-Meteo 현재값 시각, 없으면 조회 시각)
+  const anyT=(Object.values(a).find(v=>v&&v.time)||{}).time, base=anyT?new Date(anyT+':00+08:00'):new Date(DATA.fetched);
+  const fmtD=d=>d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:'Asia/Manila'});
+  const fmtT=d=>d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Manila'});
+  const tmr=new Date(base.getTime()+864e5);
+  const fmtH=d=>d.toLocaleTimeString('en-US',{hour:'numeric',timeZone:'Asia/Manila'});
+  const modeDate={now:`${fmtD(base)}, ${fmtH(base)}`, today:fmtD(base), tomorrow:fmtD(tmr)};
+  const modes=`<div class="days" role="group" aria-label="Time">${AIR_MODES.map(([m,t])=>`<button type="button" data-m="${m}" aria-pressed="${m===airMode}">${t}<small>${modeDate[m]}</small></button>`).join('')}</div>`;
   const legend=`<div class="legend">${AQI_LEVELS.slice(0,4).map(l=>`<span><i style="background:${l[2]}"></i>${l[1]}</span>`).join('')}<span><i style="background:var(--past)"></i>No data</span></div>`;
   let map='<p class="fine">Loading map…</p>';
   if(GEO){
@@ -326,7 +333,7 @@ function renderAir(){
   } else if(GEO===false){ map='<p class="fine">The map could not be loaded. See the list below.</p>' }
   const buildInfo=()=>{ const sv=L.value(a[airSel],airMode), slv=sv!=null?aqiLevel(sv):null;
   const sname=GEO&&GEO.features?(GEO.features.find(f=>f.properties.key===airSel)||{properties:{name:airSel}}).properties.name:airSel;
-  return `<div class="aqinfo" style="border-left-color:${slv?slv[2]:'var(--line)'}"><div class="where">${esc(sname)} · ${esc(AIR_MODES.find(m=>m[0]===airMode)[1].toLowerCase())}</div>`+
+  return `<div class="aqinfo" style="border-left-color:${slv?slv[2]:'var(--line)'}"><div class="where">${esc(sname)} · ${esc(AIR_MODES.find(m=>m[0]===airMode)[1].toLowerCase())} · <b>${esc(modeDate[airMode])}</b></div>`+
     (slv?`<p class="verdict">${sv} — ${esc(slv[1])}</p><p class="fine">US EPA: “${esc(slv[3])}”${a[airSel]&&airMode==='now'&&a[airSel].pm25!=null?` · PM2.5 ${a[airSel].pm25} µg/m³`:''}</p>`:'<p class="fine">No data for this time.</p>')+
     '<p class="fine">Tap a town on the map to see its value.</p></div>' };
   const info=buildInfo();
