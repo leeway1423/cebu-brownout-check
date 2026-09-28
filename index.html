@@ -79,6 +79,11 @@ select{font:400 17px/1.2 var(--body);color:var(--ink);background:var(--surface);
 .cta span{font-size:13px;opacity:.8}
 .sch{display:grid;gap:8px}.sch article{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--amber);border-radius:12px;padding:12px 14px}.sch p{margin:3px 0}.sch .t{font-weight:700}
 .cities{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px}
+.sch article.wcard{border-left-color:#2F7FB8}.sch article.wcard.old{opacity:.72}
+.wbadge{display:inline-block;font:700 11px/1 var(--body);letter-spacing:.05em;padding:3px 6px;border-radius:5px;margin-right:6px;background:var(--line);color:var(--ink);vertical-align:1px}
+.wbadge.today{background:#2F7FB8;color:#fff}.wbadge.emer{background:#C23B2C;color:#fff}
+.wl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;margin:6px 0}.wl dt{font-weight:700;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding-top:3px}.wl dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:5px}.chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:14px}
 .mapwrap{position:relative}
 .aqmap{width:100%;max-height:62vh;display:block;margin:4px auto;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .aqmap.zoomed{touch-action:none;cursor:grab}
@@ -263,9 +268,17 @@ function renderSched(){
 function renderWater(){
   const el=$('water'), w=DATA.water;
   if(w==null){ el.innerHTML='<h2>💧 Water interruptions</h2><div class="caution">MCWD\'s interruption list could not be checked just now. Water interruptions are unconfirmed.</div>'; return }
-  const card=it=>`<article style="border-left-color:#2F7FB8"><p class="t">${esc(it.cities.join(', ')||'Area as listed')} · posted ${esc(dayLabel(it.date).bottom)}</p><p>${esc(it.text)}</p></article>`;
+  // 원문을 칸(Why·When·Areas)으로 나눠 보여 주고 원문 한 줄은 접어 둔다. 못 나눈 공지는 원문만
+  const today=phtNow().date;
+  const card=it=>{ const pt=it.parts, old=it.date!==today;
+    const badges=(old?'':'<span class="wbadge today">TODAY</span>')+(pt&&pt.emergency?'<span class="wbadge emer">Emergency</span>':'')+(pt&&pt.erratum?'<span class="wbadge">Correction</span>':'');
+    const head=`<p class="t">${badges}${esc(it.cities.join(', ')||'Area as listed')} · posted ${esc(dayLabel(it.date).bottom)}</p>`;
+    const body=pt?`<dl class="wl"><dt>Why</dt><dd>${esc(pt.why)}</dd><dt>When</dt><dd><b>${esc(pt.when)}</b></dd><dt>Areas</dt><dd class="chips">${pt.areas.map(a=>`<span class="chip">${esc(a)}</span>`).join('')}</dd></dl><details><summary>As posted by MCWD</summary><p class="fine">${esc(it.text)}</p></details>`
+      :`<p>${esc(it.text)}</p>`;
+    return `<article class="wcard${old?' old':''}">${head}${body}</article>` };
+  const sorted=[...w].sort((a,b)=>(b.date===today)-(a.date===today));
   el.innerHTML='<h2>💧 Water interruptions | Walay tubig · since yesterday</h2>'+
-    (w.length?`<div class="sch">${w.map(card).join('')}</div>`:'<p class="fine">No water interruption posted by MCWD since yesterday.</p>')+
+    (w.length?`<div class="sch">${sorted.map(card).join('')}</div>`:'<p class="fine">No water interruption posted by MCWD since yesterday.</p>')+
     '<p class="fine">As posted by MCWD (Metro Cebu Water District). EWSI = emergency water service interruption · AA = affected areas · EST/ETR = estimated time of restoration.</p>';
 }
 // ── 대기질 지도 (세부 주 53개 시·군, 배경 지도 없이 경계선만). 나중에 정전·단수 레이어를 같은 지도에 얹는다
