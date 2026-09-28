@@ -79,6 +79,13 @@ select{font:400 17px/1.2 var(--body);color:var(--ink);background:var(--surface);
 .cta span{font-size:13px;opacity:.8}
 .sch{display:grid;gap:8px}.sch article{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--amber);border-radius:12px;padding:12px 14px}.sch p{margin:3px 0}.sch .t{font-weight:700}
 .cities{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px}
+.aqmap{width:100%;max-height:62vh;display:block;margin:4px auto}
+.aqmap path{stroke:var(--surface);stroke-width:1.6;cursor:pointer;outline:none}
+.aqmap path:hover,.aqmap path:focus-visible{stroke:var(--ink);stroke-width:3}
+.aqmap path.sel{stroke:var(--ink);stroke-width:4}
+.aqinfo{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.aqinfo .verdict{font-size:26px}
+details summary{cursor:pointer;font-weight:600;padding:6px 0}
 .num{font-variant-numeric:tabular-nums;user-select:all;font-weight:600}
 dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
 dt{font-weight:600} dd{margin:0}
@@ -251,16 +258,52 @@ function renderWater(){
     (w.length?`<div class="sch">${w.map(card).join('')}</div>`:'<p class="fine">No water interruption posted by MCWD since yesterday.</p>')+
     '<p class="fine">As posted by MCWD (Metro Cebu Water District). EWSI = emergency water service interruption · AA = affected areas · EST/ETR = estimated time of restoration.</p>';
 }
-const AQI_LEVELS=[[50,'Good','#2F9E44'],[100,'Moderate','#C9A400'],[150,'Unhealthy for Sensitive Groups','#E8590C'],[200,'Unhealthy','#D6336C'],[300,'Very Unhealthy','#862E9C'],[1e6,'Hazardous','#7D1128']];
+// ── 대기질 지도 (세부 주 53개 시·군, 배경 지도 없이 경계선만). 나중에 정전·단수 레이어를 같은 지도에 얹는다
+const AQI_LEVELS=[[50,'Good','#2F9E44','Air quality is satisfactory, and air pollution poses little or no risk.'],
+  [100,'Moderate','#C9A400','Air quality is acceptable. However, there may be a risk for some people, particularly those who are unusually sensitive to air pollution.'],
+  [150,'Unhealthy for Sensitive Groups','#E8590C','Members of sensitive groups may experience health effects. The general public is less likely to be affected.'],
+  [200,'Unhealthy','#D6336C','Some members of the general public may experience health effects; members of sensitive groups may experience more serious health effects.'],
+  [300,'Very Unhealthy','#862E9C','Health alert: The risk of health effects is increased for everyone.'],
+  [1e6,'Hazardous','#7D1128','Health warning of emergency conditions: everyone is more likely to be affected.']];
 const aqiLevel=a=>AQI_LEVELS.find(l=>a<=l[0]);
-function renderAir(){
-  const el=$('air'), a=DATA.air;
-  if(a==null){ el.innerHTML='<h2>🌫 Air quality</h2><p class="fine">Air quality data could not be loaded just now.</p>'; return }
-  const rows=Object.entries(a).map(([c,v])=>{ const L=aqiLevel(v.aqi);
-    return `<dt><span style="color:${L[2]}">●</span> ${esc(c)}</dt><dd><b class="num">${v.aqi}</b> ${esc(L[1])}${v.today_max!=null&&v.today_max>v.aqi?` · up to ${v.today_max} later today`:''}</dd>` }).join('');
-  el.innerHTML='<h2>🌫 Air quality · US AQI</h2><dl>'+rows+'</dl>'+
-    '<p class="fine">Model estimate, not a local measurement (covers about 40 km). Air quality: Open-Meteo.com (CC BY 4.0), contains modified Copernicus Atmosphere Monitoring Service information. Categories follow the US EPA Air Quality Index.</p>';
+const AIR_MODES=[['now','Now'],['today','Worst later today'],['tomorrow','Worst tomorrow']];
+const MAP_LAYERS={ air:{ label:'Air quality', value:(v,m)=>v&&(m==='now'?v.aqi:m==='today'?v.today_max:v.tomorrow_max) } };
+let GEO=null, airMode='now', airSel=store.get('airSel')||'Cebu City';
+function geoPaths(){
+  const pts=[]; GEO.features.forEach(f=>{ const g=f.geometry, polys=g.type==='Polygon'?[g.coordinates]:g.coordinates; f._polys=polys; polys.forEach(p=>p[0].forEach(c=>pts.push(c))) });
+  const lons=pts.map(c=>c[0]), lats=pts.map(c=>c[1]);
+  const x0=Math.min(...lons), x1=Math.max(...lons), y0=Math.min(...lats), y1=Math.max(...lats), k=Math.cos((y0+y1)/2*Math.PI/180);
+  const W=1000, s=W/((x1-x0)*k), H=Math.round((y1-y0)*s);
+  const P=c=>((c[0]-x0)*k*s).toFixed(1)+','+((y1-c[1])*s).toFixed(1);
+  GEO.features.forEach(f=>{ f._d=f._polys.map(poly=>poly.map(r=>'M'+r.map(P).join('L')+'Z').join('')).join('') });
+  GEO._vb=`0 0 ${W} ${H}`;
 }
+function renderAir(){
+  const el=$('air'), a=DATA.air, L=MAP_LAYERS.air;
+  const head='<h2>🌫 Air quality · Cebu Province</h2>';
+  if(a==null){ el.innerHTML=head+'<p class="fine">Air quality data could not be loaded just now.</p>'; return }
+  const note='<p class="fine">Model estimate, not a local measurement — each value covers a wide area (about 40 km), so nearby towns often share a color. US EPA Air Quality Index. Air quality: Open-Meteo.com (CC BY 4.0), contains modified Copernicus Atmosphere Monitoring Service information. Boundaries: PSA 2023 via philippines-json-maps (MIT).</p>';
+  const modes=`<div class="days" role="group" aria-label="Time">${AIR_MODES.map(([m,t])=>`<button type="button" data-m="${m}" aria-pressed="${m===airMode}">${t}</button>`).join('')}</div>`;
+  const legend=`<div class="legend">${AQI_LEVELS.slice(0,4).map(l=>`<span><i style="background:${l[2]}"></i>${l[1]}</span>`).join('')}<span><i style="background:var(--past)"></i>No data</span></div>`;
+  let map='<p class="fine">Loading map…</p>';
+  if(GEO){
+    map=`<svg class="aqmap" viewBox="${GEO._vb}" role="img" aria-label="Map of Cebu Province colored by air quality">`+GEO.features.map(f=>{
+      const k=f.properties.key, v=L.value(a[k],airMode), lv=v!=null?aqiLevel(v):null;
+      return `<path d="${f._d}" fill="${lv?lv[2]:'var(--past)'}" class="${k===airSel?'sel':''}" data-k="${esc(k)}" tabindex="0" role="button" aria-label="${esc(f.properties.name)}: ${v!=null?'US AQI '+v+', '+lv[1]:'no data'}"><title>${esc(f.properties.name)}: ${v!=null?v+' '+lv[1]:'no data'}</title></path>`}).join('')+'</svg>';
+  } else if(GEO===false){ map='<p class="fine">The map could not be loaded. See the list below.</p>' }
+  const sv=L.value(a[airSel],airMode), slv=sv!=null?aqiLevel(sv):null;
+  const sname=GEO&&GEO.features?(GEO.features.find(f=>f.properties.key===airSel)||{properties:{name:airSel}}).properties.name:airSel;
+  const info=`<div class="aqinfo" style="border-left-color:${slv?slv[2]:'var(--line)'}"><div class="where">${esc(sname)} · ${esc(AIR_MODES.find(m=>m[0]===airMode)[1].toLowerCase())}</div>`+
+    (slv?`<p class="verdict">${sv} — ${esc(slv[1])}</p><p class="fine">US EPA: “${esc(slv[3])}”${a[airSel]&&airMode==='now'&&a[airSel].pm25!=null?` · PM2.5 ${a[airSel].pm25} µg/m³`:''}</p>`:'<p class="fine">No data for this time.</p>')+
+    '<p class="fine">Tap a town on the map to see its value.</p></div>';
+  const rows=Object.entries(a).sort((x,y)=>(L.value(y[1],airMode)||0)-(L.value(x[1],airMode)||0)).map(([c,v])=>{ const val=L.value(v,airMode), lv=val!=null?aqiLevel(val):null;
+    return `<dt><span style="color:${lv?lv[2]:'var(--muted)'}">●</span> ${esc(c)}</dt><dd><b class="num">${val??'–'}</b> ${lv?esc(lv[1]):''}</dd>` }).join('');
+  el.innerHTML=head+modes+map+legend+info+`<details><summary>All 53 towns (highest first)</summary><dl>${rows}</dl></details>`+note;
+  el.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ airMode=b.dataset.m; renderAir(); try{ window.umami&&umami.track('air-mode',{mode:airMode}) }catch(_){} });
+  const pick=k=>{ airSel=k; store.set('airSel',k); renderAir(); const n=el.querySelector(`path[data-k="${CSS.escape(k)}"]`); n&&n.focus({preventScroll:true}); try{ window.umami&&umami.track('air-map-tap',{town:k}) }catch(_){} };
+  el.querySelectorAll('path[data-k]').forEach(p=>{ p.onclick=()=>pick(p.dataset.k); p.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pick(p.dataset.k) } } });
+}
+fetch('cebu-map.geojson').then(r=>{ if(!r.ok) throw 0; return r.json() }).then(g=>{ GEO=g; geoPaths(); renderAir() }).catch(()=>{ GEO=false; renderAir() });
 function render(){ renderDays(); renderStatus(); renderSelects(); renderResult(); renderSched(); renderWater(); renderAir() }
 $('city').onchange=e=>{ state.city=e.target.value; store.set('city',state.city); renderSelects(); renderResult(); renderSched() };
 $('brgy').onchange=e=>{ state.brgy=e.target.value; store.set('brgy',state.brgy); renderResult();
