@@ -8,37 +8,71 @@
 <link rel="canonical" href="https://leeway1423.github.io/cebualerts/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script>try{var t=localStorage.getItem('cebu-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <style>
 :root{
-  --paper:#F3F4EF; --surface:#FFFFFF; --ink:#1A1D21; --muted:#5E6670; --line:#D8DBD2;
+  --paper:#F3F5F7; --surface:#FFFFFF; --ink:#10202B; --muted:#4A5A66; --line:#D5DCE2;
+  --accent:#0B5E96; --on-accent:#FFFFFF; --chip-bg:#FFE9B8; --chip-fg:#5C3B00;
+  --band-bg:#10202B; --band-ink:#FFFFFF; --band-btn-bg:#FFFFFF; --band-btn-fg:#10202B;
   --amber:#E09B12; --amber-ink:#5A3D00; --amber-soft:#FBEBC7;
-  --red:#C23B2C; --yellow:#B98A00; --ok:#2F7D4F; --past:#E6E8E1;
-  --display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
-  --body:"Source Sans 3","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --red:#C23B2C; --yellow:#B98A00; --ok:#2F7D4F; --past:#E4EAEF;
+  --display:"Bricolage Grotesque","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --paper:#121416; --surface:#1B1E22; --ink:#ECEDE8; --muted:#9AA1A9; --line:#2E3237;
+    --paper:#0E171E; --surface:#16232D; --ink:#E8EEF2; --muted:#A9B8C3; --line:#2A3A46;
+    --accent:#6DB8EE; --on-accent:#06202F; --chip-bg:#3A2E0F; --chip-fg:#FFD98A;
+    --band-bg:#1B3040; --band-ink:#E8EEF2; --band-btn-bg:#6DB8EE; --band-btn-fg:#06202F;
     --amber:#F0B429; --amber-ink:#1A1300; --amber-soft:#3A2E10;
-    --red:#E0604F; --yellow:#E2B53A; --ok:#5DBB86; --past:#23262A;
+    --red:#E0604F; --yellow:#E2B53A; --ok:#5DBB86; --past:#1F2D38;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --paper:#121416; --surface:#1B1E22; --ink:#ECEDE8; --muted:#9AA1A9; --line:#2E3237;
+  --paper:#0E171E; --surface:#16232D; --ink:#E8EEF2; --muted:#A9B8C3; --line:#2A3A46;
+  --accent:#6DB8EE; --on-accent:#06202F; --chip-bg:#3A2E0F; --chip-fg:#FFD98A;
+  --band-bg:#1B3040; --band-ink:#E8EEF2; --band-btn-bg:#6DB8EE; --band-btn-fg:#06202F;
   --amber:#F0B429; --amber-ink:#1A1300; --amber-soft:#3A2E10;
-  --red:#E0604F; --yellow:#E2B53A; --ok:#5DBB86; --past:#23262A;
+  --red:#E0604F; --yellow:#E2B53A; --ok:#5DBB86; --past:#1F2D38;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45}
-.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
 .wrap>*,.field,.result>*{min-width:0}
 select{max-width:100%;text-overflow:ellipsis}
 .tag{font:600 12px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-h1{font:700 34px/1.02 var(--display);letter-spacing:-.01em;margin:6px 0 4px;text-wrap:balance}
+h1{font:800 clamp(38px,8vw,56px)/1.05 var(--display);letter-spacing:-.02em;margin:6px 0 4px;text-wrap:balance}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font:800 20px/1 var(--display);letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.brand svg{stroke:var(--accent)}
+.topnav{display:none;gap:20px;font-size:15px;font-weight:500}
+.topnav a{text-decoration:none;padding:13px 0}
+@media (min-width:640px){.topnav{display:flex}}
+.seg{display:flex;padding:3px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface)}
+.seg button{min-height:44px;padding:0 14px;border:0;border-radius:7px;font:600 14px/1 var(--body);cursor:pointer;background:transparent;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.seg button:focus-visible,.btn:focus-visible,.btn-link:focus-visible,.brand:focus-visible,.topnav a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.hero{display:grid;gap:16px;padding-block:8px 8px}
+.chip-free{justify-self:start;font:600 14px/1.2 var(--body);background:var(--chip-bg);color:var(--chip-fg);padding:6px 12px;border-radius:999px}
+.hero .sub{font-size:18px;line-height:1.55;max-width:560px}
+.hero-cta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 28px;background:var(--accent);color:var(--on-accent);font:600 17px/1 var(--body);border-radius:10px;text-decoration:none}
+.btn svg{stroke:currentColor}
+.btn-link{display:inline-flex;align-items:center;min-height:52px;padding:0 8px;font-weight:600;color:var(--accent);text-decoration:none}
+.covergrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:12px}
+.covergrid>div{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:8px;align-content:start}
+.covergrid svg{stroke:var(--accent)}
+.covergrid h3{font:700 18px/1.1 var(--body);margin:0}
+.covergrid p{margin:0;font-size:15px;color:var(--muted)}
+.steps{display:grid;gap:16px;margin:0;padding:0;list-style:none}
+.steps li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:start}
+.steps .n{grid-row:span 2;font:800 36px/1 var(--display);color:var(--accent);min-width:24px}
+.steps b{font:700 18px/1.2 var(--body)}
+.steps span{color:var(--muted);font-size:15px}
 .sub{color:var(--muted);margin:0}
 .status{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:14px;color:var(--muted)}
 .pill{display:inline-flex;align-items:center;gap:6px;font:700 12px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;padding:6px 9px;border-radius:999px;border:1.5px solid currentColor}
@@ -74,10 +108,10 @@ select{font:400 17px/1.2 var(--body);color:var(--ink);background:var(--surface);
 .fine{font-size:14px;color:var(--muted);margin:0}
 .panel{border-top:1.5px solid var(--line);padding-top:16px;display:grid;gap:10px;font-size:15px}
 .panel h2{font:700 20px/1.1 var(--display);margin:0}
-.cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--ink);color:var(--paper);border-radius:12px;padding:14px 16px}
+.cta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--band-bg);color:var(--band-ink);border-radius:12px;padding:16px}
 .cta b{font:700 18px/1.1 var(--display)}
 .cta span{font-size:13px;opacity:.8}
-.cta .join{background:var(--paper);color:var(--ink);font-weight:700;text-decoration:none;border-radius:10px;padding:10px 14px}
+.cta .join{background:var(--band-btn-bg);color:var(--band-btn-fg);font-weight:700;text-decoration:none;border-radius:10px;padding:14px 18px}
 .sch{display:grid;gap:8px}.sch article{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--amber);border-radius:12px;padding:12px 14px}.sch p{margin:3px 0}.sch .t{font-weight:700}
 .cities{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px}
 .sch article.wcard{border-left-color:#2F7FB8}.sch article.wcard.old{opacity:.72}
@@ -112,10 +146,32 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
 
 
 <div class="wrap">
-  <header>
+  <div class="topbar">
+    <a class="brand" href="./" aria-label="Cebu Alerts home">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      Cebu Alerts
+    </a>
+    <nav class="topnav" aria-label="Page sections">
+      <a href="#status">Today</a><a href="#covers">What we cover</a><a href="#how">How it works</a>
+    </nav>
+    <div class="seg" role="group" aria-label="Color theme">
+      <button type="button" data-theme-btn="light" aria-pressed="true">Light</button>
+      <button type="button" data-theme-btn="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+
+  <header class="hero">
     <div class="tag">Unofficial community service</div>
-    <h1>Cebu Alerts</h1>
-    <p class="sub">Scheduled &amp; rotational brownouts by barangay (Visayan Electric areas) · MCWD water interruptions · air quality</p>
+    <span class="chip-free">Free · Cebu Province · 53 cities &amp; municipalities</span>
+    <h1>Know before the power goes out.</h1>
+    <p class="sub">Brownout and water interruption alerts for Cebu, gathered from the official announcements: scheduled &amp; rotational brownouts by barangay (Visayan Electric areas), MCWD water interruptions and air quality.</p>
+    <div class="hero-cta">
+      <a class="btn" href="join/" data-umami-event="hero-viber-join-click">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Join the Viber Community
+      </a>
+      <a class="btn-link" href="#status">Check your barangay ↓</a>
+    </div>
   </header>
 
   <div class="status" id="status"></div>
@@ -146,6 +202,36 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
     </div>
   </nav>
 
+  <section class="panel" id="covers">
+    <h2>What we cover</h2>
+    <div class="covergrid">
+      <div>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
+        <h3>Power</h3>
+        <p>Scheduled and rotational brownouts by barangay in Visayan Electric areas. Updated hourly.</p>
+      </div>
+      <div>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.7s7 7.3 7 12.3a7 7 0 0 1-14 0C5 10 12 2.7 12 2.7z"/></svg>
+        <h3>Water</h3>
+        <p>Water interruptions posted by MCWD, shown with the areas and times as posted.</p>
+      </div>
+      <div>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
+        <h3>Air quality</h3>
+        <p>An estimate from Open-Meteo model data. Viber alerts go out only when the US AQI is 101 or higher.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="how">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><b>We read the notices</b><span>Official announcements from the power and water utilities.</span></li>
+      <li><span class="n">2</span><b>We sort them by place</b><span>Date, time and area are copied from the notice as posted, never guessed.</span></li>
+      <li><span class="n">3</span><b>You get it on Viber</b><span>A daily summary at 9 AM, and urgent notices as soon as they appear. Each one is checked against the original before it is posted.</span></li>
+    </ol>
+  </section>
+
   <section class="panel">
     <div class="cta">
       <div><b>Get this on Viber every day</b><br><span>Daily 9 AM schedule + rotational updates</span></div>
@@ -170,6 +256,31 @@ footer{font-size:13px;color:var(--muted);display:grid;gap:6px}
   </footer>
 </div>
 
+<script>
+(function(){
+  var root=document.documentElement;
+  function effective(){
+    var t=root.getAttribute('data-theme');
+    if(t) return t;
+    return window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  }
+  function sync(){
+    var e=effective();
+    document.querySelectorAll('[data-theme-btn]').forEach(function(b){
+      b.setAttribute('aria-pressed',String(b.getAttribute('data-theme-btn')===e));
+    });
+  }
+  document.querySelectorAll('[data-theme-btn]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var v=b.getAttribute('data-theme-btn');
+      root.setAttribute('data-theme',v);
+      try{localStorage.setItem('cebu-theme',v)}catch(e){}
+      sync();
+    });
+  });
+  sync();
+})();
+</script>
 <script>
 let DATA = null;
 function init(){

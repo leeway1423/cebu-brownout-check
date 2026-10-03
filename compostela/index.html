@@ -3,27 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Water interruption today in Compostela, Cebu · Fri, Oct 2</title>
-<meta name="description" content="Compostela, Cebu water interruptions today (Fri, Oct 2): MCWD notices as posted, plus air quality. Unofficial, updated hourly.">
+<title>Water interruption today in Compostela, Cebu · Sat, Oct 3</title>
+<meta name="description" content="Compostela, Cebu water interruptions today (Sat, Oct 3): MCWD notices as posted, plus air quality. Unofficial, updated hourly.">
 <link rel="canonical" href="https://leeway1423.github.io/cebualerts/compostela/">
+<script>try{var t=localStorage.getItem('cebu-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
 <style>
-:root{--paper:#F3F4EF;--surface:#FFF;--ink:#1A1D21;--muted:#5E6670;--line:#D8DBD2;--amber:#E09B12;--soft:#FBEBC7;--ok:#2F7D4F}
-@media (prefers-color-scheme:dark){:root{color-scheme:dark;--paper:#121416;--surface:#1B1E22;--ink:#ECEDE8;--muted:#9AA1A9;--line:#2E3237;--amber:#F0B429;--soft:#3A2E10;--ok:#5DBB86}}
+:root{--paper:#F3F5F7;--surface:#FFF;--ink:#10202B;--muted:#4A5A66;--line:#D5DCE2;--amber:#E09B12;--soft:#FBEBC7;--ok:#2F7D4F;--band-bg:#10202B;--band-ink:#FFF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--paper:#0E171E;--surface:#16232D;--ink:#E8EEF2;--muted:#A9B8C3;--line:#2A3A46;--amber:#F0B429;--soft:#3A2E10;--ok:#5DBB86;--band-bg:#1B3040;--band-ink:#E8EEF2}}
+:root[data-theme="dark"]{color-scheme:dark;--paper:#0E171E;--surface:#16232D;--ink:#E8EEF2;--muted:#A9B8C3;--line:#2A3A46;--amber:#F0B429;--soft:#3A2E10;--ok:#5DBB86;--band-bg:#1B3040;--band-ink:#E8EEF2}
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "Source Sans 3","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.wrap{max-width:620px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:18px}
-.tag{font:600 12px/1 "Source Sans 3",Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-h1{font:700 32px/1.05 "Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;margin:6px 0 4px}
-h2{font:700 22px/1.1 "Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;margin:0 0 10px}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "IBM Plex Sans","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 40px;display:grid;gap:18px}
+.tag{font:600 12px/1 "IBM Plex Sans",Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 32px/1.05 "Bricolage Grotesque","Segoe UI",Arial,sans-serif;margin:6px 0 4px}
+h2{font:700 22px/1.1 "Bricolage Grotesque","Segoe UI",Arial,sans-serif;margin:0 0 10px}
 .sub,.src,.why,footer{color:var(--muted)} .src,footer{font-size:14px}
 section{display:grid;gap:10px}
 .item{background:var(--surface);border:1.5px solid var(--line);border-left:5px solid var(--amber);border-radius:12px;padding:14px 16px}
 .item p{margin:4px 0} .item ul{margin:6px 0;padding-left:20px}
-.kind{font:700 12px/1 "Source Sans 3",Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kind{font:700 12px/1 "IBM Plex Sans",Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .time{font-weight:700;font-size:18px}
 .none{color:var(--ok);font-weight:600;margin:0}
 .item.water{border-left-color:#2F7FB8}
-.badge{display:inline-block;font:700 11px/1 "Source Sans 3",Arial,sans-serif;letter-spacing:.05em;padding:3px 6px;border-radius:5px;margin-right:6px;background:var(--line);color:var(--ink)}
+.badge{display:inline-block;font:700 11px/1 "IBM Plex Sans",Arial,sans-serif;letter-spacing:.05em;padding:3px 6px;border-radius:5px;margin-right:6px;background:var(--line);color:var(--ink)}
 .badge.today{background:#2F7FB8;color:#fff} .badge.emer{background:#C23B2C;color:#fff}
 .item.old{opacity:.72}
 .wl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0} .wl dt{font-weight:700;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.04em;padding-top:2px} .wl dd{margin:0}
@@ -31,7 +36,7 @@ section{display:grid;gap:10px}
 details summary{cursor:pointer;color:var(--muted);font-size:14px}
 .item.cancelled{border-left-color:var(--muted);opacity:.75}
 .warn{background:var(--soft);border-radius:10px;padding:10px 12px;margin:0}
-.cta{display:block;background:var(--ink);color:var(--paper);border-radius:12px;padding:14px 16px;text-decoration:none;font-weight:700}
+.cta{display:block;background:var(--band-bg);color:var(--band-ink);border-radius:12px;padding:14px 16px;text-decoration:none;font-weight:700}
 .cta.join{background:var(--surface);color:var(--ink);border:1.5px solid var(--ink)}
 a{color:inherit;text-underline-offset:3px}
 footer{display:grid;gap:6px}
@@ -43,9 +48,9 @@ footer{display:grid;gap:6px}
   <header>
     <div class="tag">Unofficial community service</div>
     <h1>Water interruptions in Compostela today</h1>
-    <p class="sub">MCWD water service area · updated Fri, Oct 2, 9:09 PM (PH time)</p>
+    <p class="sub">MCWD water service area · updated Sat, Oct 3, 8:09 AM (PH time)</p>
   </header>
-  <section><h2>Power</h2><p class="warn">Compostela power is not served by Visayan Electric, and we don't cover it yet. Check your power utility's official page.</p></section><section><h2>💧 Water interruptions | Walay tubig · since yesterday</h2><p class="none">No water interruption posted by MCWD for Compostela since yesterday.</p><p class="src">As posted by MCWD. EWSI = emergency water service interruption · AA = affected areas · EST/ETR = estimated time of restoration. <a href="https://www.mcwd.gov.ph" rel="noopener" data-umami-event="city-source-click">Source: MCWD (News → Water Service Interruptions)</a></p></section><section><h2>🌫 Air quality</h2><article class="item" style="border-left-color:#2F9E44"><div class="kind">US AQI · model estimate · as of Fri, Oct 2, 9:00 PM</div><p class="time"><span style="color:#2F9E44">●</span> 35 — Good</p><p>US EPA: “Air quality is satisfactory, and air pollution poses little or no risk.”</p><p class="why">PM2.5 8.8 µg/m³ · Forecast: rest of today (Fri, Oct 2) up to 36 · tomorrow (Sat, Oct 3) up to 43</p><p class="src">Air quality: model estimate by Open-Meteo.com (CC BY 4.0), contains modified Copernicus Atmosphere Monitoring Service information. Estimates cover a wide area (about 40 km) and are not local measurements. <a href="https://open-meteo.com/en/docs/air-quality-api" rel="noopener" data-umami-event="city-source-click">Source</a></p></article></section>
+  <section><h2>Power</h2><p class="warn">Compostela power is not served by Visayan Electric, and we don't cover it yet. Check your power utility's official page.</p></section><section><h2>💧 Water interruptions | Walay tubig · since yesterday</h2><p class="none">No water interruption posted by MCWD for Compostela since yesterday.</p><p class="src">As posted by MCWD. EWSI = emergency water service interruption · AA = affected areas · EST/ETR = estimated time of restoration. <a href="https://www.mcwd.gov.ph" rel="noopener" data-umami-event="city-source-click">Source: MCWD (News → Water Service Interruptions)</a></p></section><section><h2>🌫 Air quality</h2><article class="item" style="border-left-color:#2F9E44"><div class="kind">US AQI · model estimate · as of Sat, Oct 3, 8:00 AM</div><p class="time"><span style="color:#2F9E44">●</span> 39 — Good</p><p>US EPA: “Air quality is satisfactory, and air pollution poses little or no risk.”</p><p class="why">PM2.5 6.9 µg/m³ · Forecast: rest of today (Sat, Oct 3) up to 43 · tomorrow (Sun, Oct 4) up to 46</p><p class="src">Air quality: model estimate by Open-Meteo.com (CC BY 4.0), contains modified Copernicus Atmosphere Monitoring Service information. Estimates cover a wide area (about 40 km) and are not local measurements. <a href="https://open-meteo.com/en/docs/air-quality-api" rel="noopener" data-umami-event="city-source-click">Source</a></p></article></section>
   <a class="cta" href="../" data-umami-event="city-to-lookup">Cebu brownout &amp; water check →</a>
   <a class="cta join" href="../join/" data-umami-event="city-viber-join-click">Get daily 9 AM alerts free on Viber — join →</a>
   <footer>
